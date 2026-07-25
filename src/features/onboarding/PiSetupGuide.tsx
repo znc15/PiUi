@@ -19,7 +19,7 @@ interface PiSetupGuideProps {
 
 export const PiSetupGuide = memo(function PiSetupGuide({ onOpenSettings }: PiSetupGuideProps) {
   const { t } = useTranslation('onboarding')
-  const { running, piStatus } = useServiceStore()
+  const { running, piStatus, piEnv } = useServiceStore()
   const { servers } = useServerStore()
   const [dismissed, setDismissed] = useState(() => {
     try {
@@ -56,7 +56,9 @@ export const PiSetupGuide = memo(function PiSetupGuide({ onOpenSettings }: PiSet
     return () => clearInterval(timer)
   }, [running, piStatus, dismissed, fetchStatus])
 
-  if (!isTauri() || !running || dismissed || !piStatus || piStatus.authed) {
+  // 认证状态：优先 bridge pi-status，回退 Rust 侧直接检测（bridge 不可用时也能引导）
+  const authed = piStatus ? piStatus.authed : piEnv?.authed
+  if (!isTauri() || !running || dismissed || authed === undefined || authed) {
     return null
   }
 
@@ -109,7 +111,7 @@ export const PiSetupGuide = memo(function PiSetupGuide({ onOpenSettings }: PiSet
           </div>
 
           <p className="text-[length:var(--fs-xs)] text-text-500 leading-relaxed font-mono break-all">
-            {t('agentDir')}: {piStatus.agentDir}
+            {t('agentDir')}: {piStatus?.agentDir || piEnv?.agentDir}
           </p>
         </div>
 

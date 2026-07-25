@@ -110,6 +110,17 @@ export function ServiceSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTauriDesktop])
 
+  // 服务运行中但尚未拿到 pi-status → 定期重试
+  // （覆盖 bridge 还在启动、或外部服务版本较旧的情况）
+  useEffect(() => {
+    if (!isTauriDesktop || !serviceRunning || piStatus) return
+    void handleRefreshPiStatus()
+    const timer = setInterval(() => {
+      if (!serviceStore.piStatus) void handleRefreshPiStatus()
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [isTauriDesktop, serviceRunning, piStatus, handleRefreshPiStatus])
+
   const handleAutoStartToggle = () => {
     serviceStore.setAutoStart(!autoStartService)
   }
@@ -207,6 +218,13 @@ export function ServiceSettings() {
 
   const displayedError = serviceError || lastError
 
+  // 认证状态：优先用 bridge 的 pi-status；bridge 不可用时回退到 Rust 侧直接检测结果
+  const authInfo = piStatus
+    ? { authed: piStatus.authed, names: [...piStatus.authProviders, ...piStatus.envKeys] }
+    : piEnv
+      ? { authed: piEnv.authed, names: piEnv.authProviders }
+      : null
+
   return (
     <SettingsSection title={t('service.localService')} description={t('service.localServiceDesc')}>
       {/* 运行环境信息 */}
@@ -238,14 +256,14 @@ export function ServiceSettings() {
           <RuntimeInfoRow
             label={t('service.authStatus')}
             value={
-              piStatus
-                ? piStatus.authed
-                  ? `${t('service.authed')} (${[...piStatus.authProviders, ...piStatus.envKeys].join(', ') || '…'})`
+              authInfo
+                ? authInfo.authed
+                  ? `${t('service.authed')}${authInfo.names.length > 0 ? ` (${authInfo.names.join(', ')})` : ''}`
                   : t('service.notAuthed')
                 : null
             }
-            missingHint={t('service.authUnknown')}
-            danger={!piStatus?.authed}
+            missingHint={serviceRunning ? t('service.authUnknownRunning') : t('service.authUnknown')}
+            danger={authInfo ? !authInfo.authed : false}
           />
         </div>
       </SettingField>

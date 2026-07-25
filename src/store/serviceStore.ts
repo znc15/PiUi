@@ -29,6 +29,12 @@ export interface PiEnvironment {
   piVersion: string | null
   bridgeScript: string | null
   bridgeMode: string | null
+  /** Pi 配置目录（~/.pi/agent） */
+  agentDir: string
+  /** auth.json 中的 provider 名称（仅名称） */
+  authProviders: string[]
+  /** Rust 侧直接检测的认证状态（不依赖 bridge） */
+  authed: boolean
 }
 
 /** bridge /global/pi-status 的返回 */

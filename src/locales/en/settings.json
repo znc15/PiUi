@@ -398,7 +398,8 @@
     "envVars": "Environment Variables",
     "envVarsDesc": "Passed to the Pi Agent bridge process (e.g. ANTHROPIC_API_KEY, HTTPS_PROXY)",
     "keyPlaceholder": "KEY",
-    "valuePlaceholder": "value"
+    "valuePlaceholder": "value",
+    "authUnknownRunning": "Unknown (could not fetch status — the external service may be outdated; try refreshing or restarting the service)"
   },
   "about": {
     "title": "About & Updates",

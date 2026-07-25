@@ -33,6 +33,12 @@ pub struct PiEnvironment {
     pub bridge_script: Option<String>,
     /// "bundle" (packaged resources) or "tsx-dev" (repo sources)
     pub bridge_mode: Option<String>,
+    /// Pi agent dir (~/.pi/agent or PI_AGENT_DIR)
+    pub agent_dir: String,
+    /// provider names found in auth.json (names only, never secrets)
+    pub auth_providers: Vec<String>,
+    /// true when auth.json has entries or a known API key env var is set
+    pub authed: bool,
 }
 
 #[derive(Serialize)]
@@ -262,6 +268,63 @@ fn resolve_bridge_script(app: &AppHandle) -> Option<(PathBuf, &'static str)> {
 // Commands
 // ============================================
 
+/// Well-known provider API key env vars (names only, values never read out).
+const KNOWN_API_KEY_VARS: &[&str] = &[
+    "ANTHROPIC_API_KEY",
+    "OPENAI_API_KEY",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "GEMINI_API_KEY",
+    "MISTRAL_API_KEY",
+    "GROQ_API_KEY",
+    "XAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "ZHIPU_AI_API_KEY",
+    "MOONSHOT_API_KEY",
+    "DASHSCOPE_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "CEREBRAS_API_KEY",
+];
+
+/// Read Pi auth status directly from ~/.pi/agent/auth.json.
+/// Works without a running bridge, so the UI can show auth state even
+/// when the service is stopped or an outdated external service is used.
+fn detect_pi_auth(
+    env_vars: &std::collections::HashMap<String, String>,
+) -> (String, Vec<String>, bool) {
+    let agent_dir = env_vars
+        .get("PI_AGENT_DIR")
+        .cloned()
+        .or_else(|| env::var("PI_AGENT_DIR").ok())
+        .or_else(|| {
+            home_dir().map(|h| h.join(".pi").join("agent").to_string_lossy().to_string())
+        })
+        .unwrap_or_default();
+
+    let mut providers: Vec<String> = Vec::new();
+    if !agent_dir.is_empty() {
+        let auth_path = Path::new(&agent_dir).join("auth.json");
+        if let Ok(raw) = std::fs::read_to_string(auth_path) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw) {
+                if let Some(obj) = json.as_object() {
+                    providers = obj.keys().cloned().collect();
+                    providers.sort();
+                }
+            }
+        }
+    }
+
+    let has_env_key = KNOWN_API_KEY_VARS.iter().any(|key| {
+        env_vars
+            .get(*key)
+            .map(|v| !v.trim().is_empty())
+            .unwrap_or(false)
+            || env::var(key).map(|v| !v.trim().is_empty()).unwrap_or(false)
+    });
+
+    let authed = !providers.is_empty() || has_env_key;
+    (agent_dir, providers, authed)
+}
+
 /// Detect Node.js, pi CLI and the bundled bridge script.
 #[tauri::command]
 pub async fn detect_pi_environment(
@@ -271,6 +334,7 @@ pub async fn detect_pi_environment(
     let node = resolve_node(&env_vars, None);
     let pi = resolve_pi(&env_vars);
     let bridge = resolve_bridge_script(&app);
+    let (agent_dir, auth_providers, authed) = detect_pi_auth(&env_vars);
 
     Ok(PiEnvironment {
         node_path: node.as_ref().map(|(p, _)| p.to_string_lossy().to_string()),
@@ -279,6 +343,9 @@ pub async fn detect_pi_environment(
         pi_version: pi.and_then(|(_, version)| version),
         bridge_script: bridge.as_ref().map(|(p, _)| p.to_string_lossy().to_string()),
         bridge_mode: bridge.map(|(_, mode)| mode.to_string()),
+        agent_dir,
+        auth_providers,
+        authed,
     })
 }
 
