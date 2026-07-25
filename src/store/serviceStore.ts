@@ -71,6 +71,8 @@ interface ServiceStoreSnapshot {
   starting: boolean
   /** 最近一次启动失败的错误信息 */
   lastError: string
+  /** 用户手动停止过（本会话内），watchdog 不自动重启 */
+  suppressAutoRestart: boolean
 }
 
 function readWithLegacyMigration(key: string, legacyKey: string): string | null {
@@ -99,6 +101,7 @@ class ServiceStore {
   private _startedByUs = false
   private _starting = false
   private _lastError = ''
+  private _suppressAutoRestart = false
   private _listeners: Set<() => void> = new Set()
   private _snapshot: ServiceStoreSnapshot
 
@@ -152,6 +155,9 @@ class ServiceStore {
   }
   get lastError() {
     return this._lastError
+  }
+  get suppressAutoRestart() {
+    return this._suppressAutoRestart
   }
 
   /** 实际要用的 node 路径：手动路径 > 自动检测（空字符串交给 Rust 检测） */
@@ -230,6 +236,10 @@ class ServiceStore {
     this._lastError = v
     this._notify()
   }
+  setSuppressAutoRestart(v: boolean) {
+    this._suppressAutoRestart = v
+    this._notify()
+  }
 
   // ---- React useSyncExternalStore 接口 ----
 
@@ -255,6 +265,7 @@ class ServiceStore {
       startedByUs: this._startedByUs,
       starting: this._starting,
       lastError: this._lastError,
+      suppressAutoRestart: this._suppressAutoRestart,
     }
   }
 

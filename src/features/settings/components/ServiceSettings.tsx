@@ -149,6 +149,7 @@ export function ServiceSettings() {
       })
       if (operation !== serviceOperationRef.current) return
       applyLocalServiceUrl(result.url)
+      serviceStore.setSuppressAutoRestart(false)
       serviceStore.setStartedByUs(result.startedByUs)
       serviceStore.setRunning(true)
       serviceStore.setLastError('')
@@ -171,6 +172,7 @@ export function ServiceSettings() {
     try {
       const { invoke } = await import('@tauri-apps/api/core')
       await invoke('stop_pi_service')
+      serviceStore.setSuppressAutoRestart(true)
       if (operation !== serviceOperationRef.current) return
       serviceStore.setStartedByUs(false)
       serviceStore.setRunning(false)

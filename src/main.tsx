@@ -19,6 +19,7 @@ import { resetPathModeCache } from './utils/directoryUtils'
 import { isTauri, isTauriMobile } from './utils/tauri'
 import { apiErrorHandler, globalErrorHandler } from './utils/errorHandling'
 import { applyLocalServiceUrl } from './utils/localServiceUrl'
+import { startServiceWatchdog } from './utils/serviceWatchdog'
 
 // Polyfill: randomUUID 在非 HTTPS 环境可能缺失（如局域网 HTTP）
 // 统一补齐，避免业务层 scattered fallback。
@@ -181,6 +182,7 @@ function startApp() {
   bootstrap()
 
   void initializeNativeDesktopService()
+  startServiceWatchdog()
 
   if (isNativeTauri) {
     void getSDKClientAsync().catch(err => apiErrorHandler('initialize sdk client', err))
