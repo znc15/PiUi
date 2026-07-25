@@ -1,0 +1,7 @@
+dist
+node_modules
+public/material-icons
+src-tauri/target
+coverage
+---
+src-tauri/resources/

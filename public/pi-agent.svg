@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <circle cx="256" cy="256" r="256" fill="#141414"/>
+  <path d="M148 168 L272 256 L148 344" stroke="#38bdf8" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M292 344 H364" stroke="#38bdf8" stroke-width="36" stroke-linecap="round"/>
+  <text x="256" y="430" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="72" font-weight="700" fill="#e2e8f0">π</text>
+</svg>
