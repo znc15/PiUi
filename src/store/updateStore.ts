@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { RELEASES_API_URL, RELEASES_PAGE_URL } from '../constants/repo'
 
 export interface UpdateRelease {
   version: string
@@ -32,10 +33,10 @@ export interface UpdateSettingsBackup {
 
 type Subscriber = () => void
 
-const STORAGE_KEY = 'opencode:update-check'
+const STORAGE_KEY = 'pi-agent:update-check'
 const CHECK_INTERVAL_MS = 12 * 60 * 60 * 1000
-export const RELEASES_API_URL = 'https://api.github.com/repos/lehhair/OpenCodeUI/releases/latest'
-export const RELEASES_PAGE_URL = 'https://github.com/lehhair/OpenCodeUI/releases/latest'
+// 仓库地址集中在 src/constants/repo.ts（发布前替换为自己的仓库）
+export { RELEASES_API_URL, RELEASES_PAGE_URL }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
