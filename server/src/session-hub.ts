@@ -5,6 +5,7 @@ import {
   createAgentSessionFromServices,
   createAgentSessionRuntime,
   createAgentSessionServices,
+  DefaultResourceLoader,
   getAgentDir,
   ModelRuntime,
   SessionManager,
@@ -66,9 +67,60 @@ function projectIdFor(directory: string): string {
 
 async function getModelRuntime(): Promise<ModelRuntime> {
   if (!modelRuntimePromise) {
-    modelRuntimePromise = ModelRuntime.create()
+    modelRuntimePromise = (async () => {
+      const runtime = await ModelRuntime.create()
+      await applyExtensionProviders(runtime)
+      return runtime
+    })()
   }
   return modelRuntimePromise
+}
+
+/**
+ * 加载 ~/.pi/agent 扩展（settings.json packages），将其动态注册的 provider
+ * （如 pi-bailian-token-plan 的 bailian-tp）应用到 ModelRuntime。
+ * 与 createAgentSessionServices 的注册逻辑保持一致。
+ */
+async function applyExtensionProviders(runtime: ModelRuntime): Promise<void> {
+  try {
+    const loader = new DefaultResourceLoader({
+      cwd: getDefaultWorkspace(),
+      agentDir: getAgentDir(),
+      noSkills: true,
+      noPromptTemplates: true,
+      noThemes: true,
+      noContextFiles: true,
+    })
+    await loader.reload()
+    const extensions = loader.getExtensions()
+    console.log(
+      `[session-hub] extensions loaded: ${extensions.extensions.length}, errors: ${extensions.errors.length}`,
+    )
+    for (const failure of extensions.errors.slice(0, 3)) {
+      console.warn(`[session-hub] extension load failed: ${failure.path}: ${failure.error}`)
+    }
+
+    for (const { name, config, extensionPath } of extensions.runtime.pendingProviderRegistrations) {
+      try {
+        runtime.registerProvider(name, config)
+        console.log(`[session-hub] extension provider registered: ${name}`)
+      } catch (err) {
+        console.warn(`[session-hub] extension "${extensionPath}" registerProvider failed:`, err)
+      }
+    }
+    extensions.runtime.pendingProviderRegistrations = []
+
+    for (const { provider, extensionPath } of extensions.runtime.pendingNativeProviderRegistrations) {
+      try {
+        runtime.registerNativeProvider(provider)
+      } catch (err) {
+        console.warn(`[session-hub] extension "${extensionPath}" registerNativeProvider failed:`, err)
+      }
+    }
+    extensions.runtime.pendingNativeProviderRegistrations = []
+  } catch (err) {
+    console.warn('[session-hub] loading extension providers failed:', err)
+  }
 }
 
 function toApiSession(meta: SessionMeta) {
@@ -762,6 +814,8 @@ export async function listProviders(options?: { refresh?: boolean }) {
       // 强制从网络/模型仓库刷新目录（用户在 pi 侧改了模型配置后立即可见）
       try {
         await modelRuntime.refresh()
+        // 重新应用扩展注册的 provider（新装的扩展刷新后生效）
+        await applyExtensionProviders(modelRuntime)
       } catch (err) {
         console.warn('[session-hub] model catalog refresh failed', err)
       }

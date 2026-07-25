@@ -18,6 +18,13 @@ import * as lspHub from './lsp-hub.js'
 import { getPiStatus } from './pi-status.js'
 
 const VERSION = '0.1.0-pi'
+
+// 将打包进 bridge 的 SDK 暴露到 globalThis：
+// 单文件 bundle 内 jiti 的 '@earendil-works/pi-coding-agent' 别名指向
+// <bundle>/../../index.js（见 src-tauri/index.js 桥接文件），
+// 使 pi 扩展（pi-ask / pi-subagents 等）与 bridge 使用同一份 SDK。
+import * as piSdk from '@earendil-works/pi-coding-agent'
+;(globalThis as Record<string, unknown>).__PI_SDK__ = piSdk
 const PORT = Number(process.env.PORT || process.env.PI_PORT || 4096)
 const HOST = process.env.HOST || '127.0.0.1'
 
