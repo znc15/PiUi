@@ -1,5 +1,5 @@
 import { useSyncExternalStore, useCallback } from 'react'
-import { getActiveModels, type ModelInfo } from '../api'
+import { getActiveModels, refreshActiveModels, type ModelInfo } from '../api'
 import { getSDKClientAsync } from '../api/sdk'
 import { serverStore } from '../store/serverStore'
 
@@ -32,7 +32,7 @@ function _setState(patch: Partial<ModelsState>) {
   _notify()
 }
 
-async function _fetchModels(force = false) {
+async function _fetchModels(force = false, refreshServer = false) {
   if (_fetchPromise && !force) return _fetchPromise
 
   const generation = ++_fetchGeneration
@@ -41,7 +41,7 @@ async function _fetchModels(force = false) {
     _setState({ isLoading: true, error: null })
     try {
       await getSDKClientAsync()
-      const data = await getActiveModels()
+      const data = refreshServer ? await refreshActiveModels() : await getActiveModels()
       if (generation === _fetchGeneration) {
         _setState({ models: data, isLoading: false })
       }
@@ -59,7 +59,8 @@ async function _fetchModels(force = false) {
   return _fetchPromise
 }
 
-export function refreshModels() {
+export function refreshModels(refreshServer = false) {
+  return _fetchModels(true, refreshServer)
   return _fetchModels(true)
 }
 
@@ -92,7 +93,7 @@ interface UseModelsResult {
 
 export function useModels(): UseModelsResult {
   const state = useSyncExternalStore(_subscribe, _getSnapshot)
-  const refetch = useCallback(() => refreshModels(), [])
+  const refetch = useCallback(() => refreshModels(true), [])
 
   return {
     models: state.models,

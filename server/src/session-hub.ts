@@ -755,9 +755,17 @@ export function getStatusMap(directory?: string): Record<string, { type: string 
   return out
 }
 
-export async function listProviders() {
+export async function listProviders(options?: { refresh?: boolean }) {
   try {
     const modelRuntime = await getModelRuntime()
+    if (options?.refresh) {
+      // 强制从网络/模型仓库刷新目录（用户在 pi 侧改了模型配置后立即可见）
+      try {
+        await modelRuntime.refresh()
+      } catch (err) {
+        console.warn('[session-hub] model catalog refresh failed', err)
+      }
+    }
     let models = modelRuntime.getAvailableSnapshot()
     if (!models.length) {
       try {

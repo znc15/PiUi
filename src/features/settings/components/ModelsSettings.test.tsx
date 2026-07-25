@@ -12,6 +12,7 @@ const { useModelsMock, useHiddenModelKeysMock, setVisibleMock, setManyVisibleMoc
 
 vi.mock('../../../hooks', () => ({
   useModels: useModelsMock,
+  refreshModels: vi.fn(),
 }))
 
 vi.mock('../../../store', () => ({

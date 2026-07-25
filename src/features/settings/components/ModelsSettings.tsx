@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ChevronDownIcon,
@@ -8,7 +8,7 @@ import {
   EyeOffIcon,
   SearchIcon,
 } from '../../../components/Icons'
-import { useModels } from '../../../hooks'
+import { useModels, refreshModels } from '../../../hooks'
 import { modelVisibilityStore, useHiddenModelKeys } from '../../../store'
 import { groupModelsByProvider, getModelKey } from '../../../utils/modelUtils'
 import type { ModelInfo } from '../../../types/ui'
@@ -77,6 +77,11 @@ export function ModelsSettings() {
   // 范围选择锚点：上一次单击的模型 key
   const anchorKeyRef = useRef<string | null>(null)
   const hiddenModelKeySet = useMemo(() => new Set(hiddenModelKeys), [hiddenModelKeys])
+
+  // 打开模型设置时强制刷新一次服务端模型目录（pi 侧改了配置立即可见）
+  useEffect(() => {
+    void refreshModels(true)
+  }, [])
 
   const visibleCount = useMemo(
     () => models.reduce((count, model) => (hiddenModelKeySet.has(getModelKey(model)) ? count : count + 1), 0),

@@ -50,12 +50,7 @@ export * from './lsp'
 // 基于 SDK: config.providers()
 // ============================================
 
-export async function getActiveModels(directory?: string): Promise<ModelInfo[]> {
-  const sdk = getSDKClient()
-  const data = requireRecord(
-    unwrap(await sdk.config.providers({ directory: formatPathForApi(directory) })),
-    'Invalid Pi Agent providers response',
-  )
+function providersResponseToModels(data: Record<string, unknown>): ModelInfo[] {
   const providers = requireArray<Record<string, unknown>>(data.providers, 'Invalid Pi Agent providers response')
   const models: ModelInfo[] = []
 
@@ -93,6 +88,25 @@ export async function getActiveModels(directory?: string): Promise<ModelInfo[]> 
   }
 
   return models
+}
+
+export async function getActiveModels(directory?: string): Promise<ModelInfo[]> {
+  const sdk = getSDKClient()
+  const data = requireRecord(
+    unwrap(await sdk.config.providers({ directory: formatPathForApi(directory) })),
+    'Invalid Pi Agent providers response',
+  )
+  return providersResponseToModels(data)
+}
+
+/** 强制刷新服务端模型目录（重新拉取模型仓库），返回最新列表 */
+export async function refreshActiveModels(directory?: string): Promise<ModelInfo[]> {
+  const sdk = getSDKClient()
+  const data = requireRecord(
+    unwrap(await sdk.config.refreshProviders({ directory: formatPathForApi(directory) })),
+    'Invalid Pi Agent providers response',
+  )
+  return providersResponseToModels(data)
 }
 
 export async function getDefaultModels(directory?: string): Promise<Record<string, string>> {

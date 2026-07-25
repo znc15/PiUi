@@ -11,6 +11,7 @@ import { ChevronDownIcon, SearchIcon, ThinkingIcon, EyeIcon, CheckIcon, PinIcon 
 import { DropdownMenu } from '../../components/ui'
 import type { ModelInfo } from '../../api'
 import { useInputCapabilities } from '../../hooks/useInputCapabilities'
+import { refreshModels } from '../../hooks/useModels'
 import {
   getModelKey,
   groupModelsByProvider,
@@ -454,6 +455,8 @@ export const ModelSelector = memo(
       openHighlightedIndexRef.current = targetIndex
       setHighlightedIndex(targetIndex)
       setIsOpen(true)
+      // 打开下拉时后台刷新模型列表（不阻塞交互）
+      void refreshModels()
       setSearchQuery('')
       ignoreMouseRef.current = true
       setTimeout(() => {

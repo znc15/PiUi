@@ -60,6 +60,7 @@ export function createPiClient() {
       update: (params: { directory?: string; config: unknown }) =>
         http.patch('/config', params.config, q({ directory: params.directory })),
       providers: (params?: { directory?: string }) => http.get('/config/providers', q(params)),
+      refreshProviders: (params?: { directory?: string }) => http.post('/config/providers/refresh', {}, q(params)),
     },
     session: {
       list: (params?: { directory?: string; roots?: boolean; start?: number; search?: string; limit?: number }) =>

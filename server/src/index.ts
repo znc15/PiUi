@@ -213,6 +213,13 @@ app.put('/mcp/config', async c => {
   }
 })
 app.get('/config/providers', async c => c.json(await hub.listProviders()))
+app.post('/config/providers/refresh', async c => {
+  try {
+    return c.json(await hub.listProviders({ refresh: true }))
+  } catch (e) {
+    return err(c, e)
+  }
+})
 app.get('/provider', async c => c.json(await hub.listProviders()))
 
 // ---- Session ----
