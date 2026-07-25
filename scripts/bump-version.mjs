@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * bump-version.mjs - One-command version bump for OpenCodeUI
+ * bump-version.mjs - One-command version bump for Pi Agent UI
  *
  * Usage:
  *   node scripts/bump-version.mjs <version>

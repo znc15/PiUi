@@ -101,6 +101,26 @@ src-tauri/target/release/bundle/macos/Pi Agent UI.app
 
 > 说明：bridge 以单文件 JS 形式随包分发，`node-pty` 为原生模块未内嵌 —— 打包版终端功能降级为 stub，其余功能完整。
 
+## CI/CD 与发布
+
+- **每次 push / PR**：`.github/workflows/ci.yml` 自动跑 typecheck / lint / 测试 / 构建，
+  并在 macOS runner 上打包 DMG 作为 Actions artifact
+- **打 tag 发布**：推送 `v*` tag 触发 `.github/workflows/release.yml`，
+  自动构建 DMG 并上传到 GitHub Release（应用内「检查更新」即可发现新版本）
+
+发布流程：
+
+```bash
+# 1. 升版本（更新 package.json / tauri.conf.json / Cargo.toml + 生成 CHANGELOG 条目）
+npm run release:prepare -- 0.2.0
+
+# 2. 按脚本提示提交并打 tag
+git add -A && git commit -m "chore: bump version to 0.2.0"
+git tag v0.2.0 && git push && git push origin v0.2.0
+# → CI 自动构建并发布 Release
+```
+
+> 应用内检查更新的仓库地址在 `src/constants/repo.ts`（`GITHUB_REPO`），发布前请替换为自己的仓库。
 ## MCP 配置
 
 MCP 服务器配置保存在 `~/.pi/agent/mcp.json`（与 pi CLI 共用），UI 的 **MCP 面板**支持查看状态、添加/连接/断开服务器。

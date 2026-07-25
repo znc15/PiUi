@@ -26,6 +26,7 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "package": "npm run tauri:build",
     "postinstall": "node scripts/copy-material-icons.mjs"
   },
   "dependencies": {
