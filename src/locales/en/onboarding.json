@@ -1,0 +1,15 @@
+{
+  "title": "Pi needs configuration",
+  "description": "The Pi Agent bridge is running, but no model credentials were found. Configure one of the following to start chatting.",
+  "optionA": "Option A: Install the pi CLI and log in",
+  "recommended": "Recommended",
+  "installCli": "Install the pi CLI:",
+  "loginCli": "Run `pi` in a terminal, then use the /login command to complete authentication.",
+  "optionB": "Option B: Use an API key",
+  "envVarsHint": "Add an API key under Settings → Local Service → Environment Variables, e.g.",
+  "agentDir": "Pi agent dir",
+  "dismiss": "Later",
+  "recheck": "Re-check",
+  "rechecking": "Checking...",
+  "openSettings": "Open Settings"
+}

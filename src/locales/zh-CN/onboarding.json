@@ -1,0 +1,15 @@
+{
+  "title": "Pi 尚未配置",
+  "description": "Pi Agent bridge 已在运行，但未检测到模型认证信息。完成以下任一配置即可开始对话。",
+  "optionA": "方式一：安装 pi CLI 并登录",
+  "recommended": "推荐",
+  "installCli": "安装 pi CLI：",
+  "loginCli": "在终端运行 `pi`，然后使用 /login 命令完成登录。",
+  "optionB": "方式二：使用 API Key",
+  "envVarsHint": "在 设置 → 本地服务 → 环境变量 中添加 API Key，例如",
+  "agentDir": "Pi 配置目录",
+  "dismiss": "稍后再说",
+  "recheck": "重新检测",
+  "rechecking": "检测中...",
+  "openSettings": "打开设置"
+}
