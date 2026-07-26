@@ -1,0 +1,222 @@
+# 可复用的四端构建流水线（macOS / Windows / Linux / Android）
+# - ci.yml 在 push/PR 时调用：仅构建并上传 artifact
+# - release.yml 在打 tag 时调用：构建并发布 GitHub Release
+name: Build Matrix
+
+on:
+  workflow_call:
+    inputs:
+      release:
+        type: boolean
+        default: false
+        description: 构建完成后是否发布 GitHub Release
+
+jobs:
+  validate:
+    name: 校验（typecheck / lint / test / build）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        run: npm --prefix server ci
+
+      - name: Type check (frontend)
+        run: npm run typecheck
+
+      - name: Type check (server)
+        run: npm --prefix server run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:run
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build bridge bundle
+        run: npm run build:bridge
+
+  desktop:
+    name: 桌面端（${{ matrix.name }}）
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            bundles: dmg
+            name: macos-aarch64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            bundles: dmg
+            name: macos-x86_64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            bundles: nsis
+            name: windows-x64
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: deb,appimage
+            name: linux-x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Rust stable (${{ matrix.target }})
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libfuse2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        run: npm --prefix server ci
+
+      - name: Tauri build (${{ matrix.bundles }})
+        run: npm run tauri:build -- --target ${{ matrix.target }} --bundles ${{ matrix.bundles }}
+
+      - name: Upload macOS artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-agent-ui-${{ matrix.name }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-agent-ui-${{ matrix.name }}
+          path: src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Upload Linux artifacts
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-agent-ui-${{ matrix.name }}
+          path: |
+            src-tauri/target/release/bundle/deb/*.deb
+            src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error
+
+  android:
+    name: 安卓（arm64 APK）
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK (tauri-cli pinned version)
+        run: sdkmanager --install "ndk;29.0.13846066"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install server dependencies
+        run: npm --prefix server ci
+
+      # CI=true 时 tauri 自动跳过交互；同时安装 Rust Android targets
+      - name: Init Android project
+        run: npx tauri android init
+
+      # 仅构建 arm64（覆盖绝大多数设备，CI 更快）；
+      # 注意：未配置签名，产物为 unsigned release APK
+      - name: Build APK
+        run: npx tauri android build --target aarch64
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pi-agent-ui-android-arm64
+          path: src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+  publish:
+    name: 发布 GitHub Release
+    if: inputs.release
+    needs: [desktop, android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: pi-agent-ui-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: List release files
+        run: ls -lhR artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          generate_release_notes: true
+          draft: false
+          # 带预发布标识的 tag（如 v0.2.0-beta.1）标记为 pre-release
+          prerelease: ${{ contains(github.ref_name, '-') }}

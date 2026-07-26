@@ -18,7 +18,7 @@ Pi AgentSession (tools: read/bash/edit/write…)
 - **前端**：保留 OpenCodeUI 的完整界面（Chat / 文件树 / Diff / 终端 / 主题 / 会话管理等）
 - **API 层**：已去掉 `@opencode-ai/sdk`，改为本地 `src/api/sdk.ts` HTTP 客户端
 - **后端**：`server/` 用 Pi SDK 实现 OpenCode 兼容的 REST + SSE 接口
-- **桌面端**：`src-tauri/`（Tauri 2，当前目标平台 macOS）
+- **桌面端**：`src-tauri/`（Tauri 2，支持 macOS / Windows / Linux / Android 四端）
   - 启动应用时自动检测系统 Node（PATH / Homebrew / nvm / fnm / volta）并拉起内嵌 bridge
   - 检测系统 `pi` CLI 及版本，设置页展示运行环境信息
   - 未检测到 Pi 认证信息（`~/.pi/agent/auth.json` 或 API Key）时弹出配置引导
@@ -104,9 +104,13 @@ src-tauri/target/release/bundle/macos/Pi Agent UI.app
 ## CI/CD 与发布
 
 - **每次 push / PR**：`.github/workflows/ci.yml` 自动跑 typecheck / lint / 测试 / 构建，
-  并在 macOS runner 上打包 DMG 作为 Actions artifact
+  并并行构建四端产物（macOS aarch64/x86_64 DMG、Windows NSIS 安装包、
+  Linux deb/AppImage、Android arm64 APK），存为 Actions artifact
 - **打 tag 发布**：推送 `v*` tag 触发 `.github/workflows/release.yml`，
-  自动构建 DMG 并上传到 GitHub Release（应用内「检查更新」即可发现新版本）
+  自动构建全部平台并上传到 GitHub Release（应用内「检查更新」即可发现新版本）
+
+> Android 说明：CI 产物为未签名 release APK（安装前需自行签名）；
+> 安卓设备无 Node 环境，pi bridge 不能在设备本地运行，完整功能需连接远程 bridge。
 
 发布流程：
 
