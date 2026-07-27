@@ -61,6 +61,10 @@ export default defineConfig({
   clearScreen: false,
 
   server: {
+    // 忽略 Rust 构建产物，避免 Vite 监听与 cargo 并发构建抢文件锁（EBUSY）
+    watch: {
+      ignored: ['**/.git/**', '**/node_modules/**', '**/test-results/**', '**/src-tauri/target/**'],
+    },
     // Tauri mobile dev 需要通过网络访问 Vite dev server
     host: process.env.TAURI_DEV_HOST || false,
     // 避免端口冲突
