@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.1.0-beta.4] - 2026-07-28 (Pre-release)
+
+- fix: 检测 models.json 自定义 provider，修复已配置却弹「未配置」引导浮层 (32f6da2)
+
 ## [v0.1.0-beta.3] - 2026-07-27 (Pre-release)
 
 - fix(desktop): 去掉 bridge 入口脚本路径的 `\\?\` 前缀，修复 Windows 安装版启动崩溃（EISDIR） (92ea122)
