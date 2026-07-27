@@ -1,9 +1,14 @@
 # Changelog
 
+## [v0.1.0-beta.3] - 2026-07-27 (Pre-release)
+
+- fix(desktop): 去掉 bridge 入口脚本路径的 `\\?\` 前缀，修复 Windows 安装版启动崩溃（EISDIR） (92ea122)
+- fix(dev): vite 忽略 src-tauri/target，避免 dev 启动与 cargo 并发构建抢锁 EBUSY (1d799bb)
+
 ## [v0.1.0-beta.2] - 2026-07-27 (Pre-release)
 
-- chore(desktop): 应用 clippy 建议（冗余 into / trim_end_matches 切片） (80df174)
 - fix(desktop): 本地 bridge 请求绕过系统代理，修复 Clash 环境下健康检查 502 (79f157f)
+- chore(desktop): 应用 clippy 建议（冗余 into / trim_end_matches 切片） (80df174)
 
 ## [v0.1.0-beta.1] - 2026-07-27 (Pre-release)
 
