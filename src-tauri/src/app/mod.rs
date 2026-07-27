@@ -302,7 +302,37 @@ fn configure_desktop_window_builder<'a, R: tauri::Runtime, M: tauri::Manager<R>>
     window_builder
 }
 
+/// Ensure loopback API requests bypass any configured HTTP proxy.
+///
+/// reqwest (used by tauri-plugin-http) honors the `NO_PROXY` / `no_proxy`
+/// environment variables but does NOT apply the Windows WinINET
+/// `ProxyOverride` bypass list. On machines with a system proxy enabled
+/// (e.g. Clash / V2Ray on 127.0.0.1:7897), requests to the local Pi bridge
+/// would otherwise be routed through that proxy and fail with
+/// `502 Bad Gateway` whenever the bridge is not instantly reachable.
+/// Prepending loopback entries to `NO_PROXY` keeps localhost traffic direct
+/// while leaving every other host (e.g. AI provider APIs) proxied as before.
+fn ensure_localhost_bypasses_proxy() {
+    const LOOPBACK: &str = "127.0.0.1,localhost,::1";
+    for key in ["NO_PROXY", "no_proxy"] {
+        let merged = match std::env::var(key) {
+            Ok(existing) if !existing.trim().is_empty() => {
+                if existing.split(',').any(|entry| entry.trim() == "127.0.0.1") {
+                    existing
+                } else {
+                    format!("{LOOPBACK},{existing}")
+                }
+            }
+            _ => LOOPBACK.to_string(),
+        };
+        std::env::set_var(key, merged);
+    }
+}
+
 pub fn run() {
+    // Must run before any tauri-plugin-http (reqwest) request is made.
+    ensure_localhost_bypasses_proxy();
+
     let builder = tauri::Builder::default().manage(BridgeState::default());
 
     #[cfg(not(target_os = "android"))]
@@ -336,7 +366,7 @@ pub fn run() {
 
             #[cfg(not(target_os = "android"))]
             {
-                let main_window = create_main_window(&app.handle())?;
+                let main_window = create_main_window(app.handle())?;
                 finish_desktop_window_setup(&main_window);
                 restore_window_state(&main_window);
 
@@ -422,7 +452,7 @@ pub fn run() {
                     match event {
                         tauri::DragDropEvent::Enter { paths, position } => {
                             let paths: Vec<String> = paths
-                                .into_iter()
+                                .iter()
                                 .map(|p| p.to_string_lossy().to_string())
                                 .collect();
                             let _ = window.emit(
@@ -435,7 +465,7 @@ pub fn run() {
                         }
                         tauri::DragDropEvent::Drop { paths, position } => {
                             let paths: Vec<String> = paths
-                                .into_iter()
+                                .iter()
                                 .map(|p| p.to_string_lossy().to_string())
                                 .collect();
                             let _ = window.emit(
