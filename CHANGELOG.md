@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.1.0-beta.2] - 2026-07-27 (Pre-release)
+
+- chore(desktop): 应用 clippy 建议（冗余 into / trim_end_matches 切片） (80df174)
+- fix(desktop): 本地 bridge 请求绕过系统代理，修复 Clash 环境下健康检查 502 (79f157f)
+
 ## [v0.1.0-beta.1] - 2026-07-27 (Pre-release)
 
 - chore(ci): 升级 GitHub Actions 至 node24 版本并清理 lint 死代码 (2b3402c)
