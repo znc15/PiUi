@@ -13,6 +13,7 @@ crate-type = ["cdylib", "rlib", "staticlib"]
 name = "app_lib"
 
 [dependencies]
+dunce = "1"
 futures-util = "0.3"
 log = "0.4"
 papaya = "0.2.3"

@@ -245,7 +245,9 @@ fn resolve_bridge_script(app: &AppHandle) -> Option<(PathBuf, &'static str)> {
         for rel in ["resources/pi-bridge/index.mjs", "pi-bridge/index.mjs"] {
             let candidate = resource_dir.join(rel);
             if candidate.is_file() {
-                return Some((candidate, "bundle"));
+                // Tauri 在 Windows 上返回带 `\\?\` 前缀的 verbatim 路径，
+                // Node.js 无法以此前缀加载入口脚本（会退化成 lstat 'C:' → EISDIR）。
+                return Some((dunce::simplified(&candidate).to_path_buf(), "bundle"));
             }
         }
     }
@@ -257,7 +259,8 @@ fn resolve_bridge_script(app: &AppHandle) -> Option<(PathBuf, &'static str)> {
         .join("src")
         .join("index.ts");
     if ts_entry.is_file() {
-        let resolved = ts_entry.canonicalize().unwrap_or(ts_entry);
+        // dunce::canonicalize 规范化路径但不加 `\\?\` 前缀（std 的 canonicalize 会加）。
+        let resolved = dunce::canonicalize(&ts_entry).unwrap_or(ts_entry);
         return Some((resolved, "tsx-dev"));
     }
 
