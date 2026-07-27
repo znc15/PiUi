@@ -400,13 +400,13 @@ export function disposeSession(sessionID: string): void {
  * Dispose all pending permissions and questions.
  */
 export function disposeAll(): void {
-  for (const [id, pending] of pendingPermissions.entries()) {
+  for (const [, pending] of pendingPermissions.entries()) {
     clearTimeout(pending.timer)
     pending.resolve('reject')
   }
   pendingPermissions.clear()
 
-  for (const [id, pending] of pendingQuestions.entries()) {
+  for (const [, pending] of pendingQuestions.entries()) {
     clearTimeout(pending.timer)
     pending.reject('Server shutting down')
   }

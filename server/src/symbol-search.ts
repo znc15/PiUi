@@ -28,7 +28,6 @@ const KIND_INTERFACE = 8
 const KIND_TYPE = 22
 const KIND_ENUM = 10
 const KIND_VARIABLE = 13
-const KIND_METHOD = 6
 const KIND_CONSTANT = 14
 
 // ---- Pattern definitions ----
