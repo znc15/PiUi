@@ -503,7 +503,7 @@ fn parse_listening_url(line: &str) -> Option<String> {
     let raw_url = line[start..]
         .split_whitespace()
         .next()?
-        .trim_end_matches(|c| matches!(c, ',' | ';' | ')'));
+        .trim_end_matches([',', ';', ')']);
     let normalized = raw_url
         .replace("http://0.0.0.0:", "http://127.0.0.1:")
         .replace("https://0.0.0.0:", "https://127.0.0.1:");

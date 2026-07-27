@@ -335,7 +335,7 @@ async fn connect_ws(
         tokio::select! {
             outbound = rx.recv() => match outbound {
                 Some(BridgeCommand::Send(data)) => {
-                    if let Err(error) = write.send(Message::Text(data.into())).await {
+                    if let Err(error) = write.send(Message::Text(data)).await {
                         let msg = format!("WebSocket write failed: {}", error);
                         emit(&on_event, BridgeEvent::Error { message: msg.clone() });
                         state.remove_if_current(&key, conn_id);
