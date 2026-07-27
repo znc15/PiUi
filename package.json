@@ -1,6 +1,6 @@
 {
   "name": "pi-opencode-ui",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.1",
   "description": "Pi Agent UI — web frontend for the Pi coding agent",
   "license": "GPL-3.0-only",
   "type": "module",
