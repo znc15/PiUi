@@ -6,6 +6,7 @@ import path from 'node:path'
 // Pi runtime status detection
 // - auth.json (written by `pi` /login)
 // - well-known provider API keys from env
+// - custom providers configured in models.json (e.g. self-hosted gateway)
 // ============================================
 
 const KNOWN_ENV_KEYS = [
@@ -34,6 +35,8 @@ export interface PiStatus {
   authProviders: string[]
   /** well-known API key env var names that are set (names only) */
   envKeys: string[]
+  /** custom provider names configured in models.json (names only, never secrets) */
+  customProviders: string[]
   /** node version running the bridge */
   nodeVersion: string
   /** bridge version */
@@ -62,11 +65,25 @@ export async function getPiStatus(version = '0.1.0-pi'): Promise<PiStatus> {
     return typeof value === 'string' && value.length > 0
   })
 
+  // models.json 里的自定义 provider（如自建 gateway，内嵌 apiKey/baseUrl）也视为已配置
+  let customProviders: string[] = []
+  try {
+    const raw = await fs.readFile(path.join(agentDir, 'models.json'), 'utf8')
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const providers = parsed?.providers
+    if (providers && typeof providers === 'object' && !Array.isArray(providers)) {
+      customProviders = Object.keys(providers as Record<string, unknown>)
+    }
+  } catch {
+    // no models.json or no custom providers
+  }
+
   return {
     agentDir,
-    authed: authProviders.length > 0 || envKeys.length > 0,
+    authed: authProviders.length > 0 || envKeys.length > 0 || customProviders.length > 0,
     authProviders,
     envKeys,
+    customProviders,
     nodeVersion: process.version,
     version,
   }

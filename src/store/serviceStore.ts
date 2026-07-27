@@ -43,6 +43,8 @@ export interface PiStatus {
   authed: boolean
   authProviders: string[]
   envKeys: string[]
+  /** models.json 中配置的自定义 provider 名称（仅名称） */
+  customProviders: string[]
   nodeVersion: string
   version: string
 }
@@ -182,7 +184,7 @@ class ServiceStore {
     try {
       localStorage.setItem(STORAGE_KEY_AUTO_START, String(v))
     } catch {
-      /* */
+      /* 忽略 localStorage 持久化失败（隐私模式/配额超限），仅影响下次启动默认值 */
     }
     this._notify()
   }
@@ -192,7 +194,7 @@ class ServiceStore {
     try {
       localStorage.setItem(STORAGE_KEY_NODE_PATH, v)
     } catch {
-      /* */
+      /* 忽略 localStorage 持久化失败（隐私模式/配额超限），仅影响下次启动默认值 */
     }
     this._notify()
   }
@@ -202,7 +204,7 @@ class ServiceStore {
     try {
       localStorage.setItem(STORAGE_KEY_ENV_VARS, JSON.stringify(vars))
     } catch {
-      /* */
+      /* 忽略 localStorage 持久化失败（隐私模式/配额超限），仅影响下次启动默认值 */
     }
     this._notify()
   }

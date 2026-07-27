@@ -222,7 +222,10 @@ export function ServiceSettings() {
 
   // 认证状态：优先用 bridge 的 pi-status；bridge 不可用时回退到 Rust 侧直接检测结果
   const authInfo = piStatus
-    ? { authed: piStatus.authed, names: [...piStatus.authProviders, ...piStatus.envKeys] }
+    ? {
+        authed: piStatus.authed,
+        names: [...piStatus.authProviders, ...piStatus.envKeys, ...piStatus.customProviders],
+      }
     : piEnv
       ? { authed: piEnv.authed, names: piEnv.authProviders }
       : null

@@ -316,6 +316,23 @@ fn detect_pi_auth(
         }
     }
 
+    // models.json 里的自定义 provider（如自建 gateway，内嵌 apiKey/baseUrl）也视为已配置
+    if !agent_dir.is_empty() {
+        let models_path = Path::new(&agent_dir).join("models.json");
+        if let Ok(raw) = std::fs::read_to_string(models_path) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&raw) {
+                if let Some(obj) = json.get("providers").and_then(|p| p.as_object()) {
+                    for key in obj.keys() {
+                        if !providers.contains(key) {
+                            providers.push(key.clone());
+                        }
+                    }
+                }
+            }
+        }
+        providers.sort();
+    }
+
     let has_env_key = KNOWN_API_KEY_VARS.iter().any(|key| {
         env_vars
             .get(*key)
