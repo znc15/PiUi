@@ -18,6 +18,7 @@ import { useFolderProjectDrop } from './useFolderProjectDrop'
 import { FolderProjectDropOverlay } from './FolderProjectDropOverlay'
 import { useChatSession, useModels, useModelSelection } from '../../hooks'
 import { useServerStore } from '../../hooks/useServerStore'
+import { LOCAL_SERVER_ID } from '../../store/serverStore'
 import { useCancelHint } from '../../hooks/useCancelHint'
 import { InlineToolRequestContext, type InlineToolRequestContextValue } from './InlineToolRequestContext'
 import { ChatViewportProvider, canUseSplitPane, useChatViewportMaybe, type ChatViewportValue } from './chatViewport'
@@ -26,7 +27,7 @@ import { SessionNavigationContext } from '../../contexts/SessionNavigationContex
 import { useDirectory } from '../../contexts/useDirectory'
 import { paneLayoutStore } from '../../store/paneLayoutStore'
 import { autoApproveStore } from '../../store/autoApproveStore'
-import { messageStore, paneControllerStore, useHiddenModelKeys } from '../../store'
+import { messageStore, paneControllerStore, useHiddenModelKeys, useServiceStore } from '../../store'
 import { restoreModelSelection } from '../../utils/sessionHelpers'
 import { findModelByKey, getModelKey } from '../../utils/modelUtils'
 import { useTheme } from '../../hooks/useTheme'
@@ -161,6 +162,7 @@ export const ChatPane = memo(function ChatPane({
   const { models, isLoading: modelsLoading, refetch: refetchModels } = useModels()
   const { activeServer, getHealth } = useServerStore()
   const activeServerHealth = activeServer ? getHealth(activeServer.id) : null
+  const { autoStart, running, lastError } = useServiceStore()
   const hiddenModelKeys = useHiddenModelKeys()
   const visibleModels = useMemo(
     () => models.filter(model => !hiddenModelKeys.includes(getModelKey(model))),
@@ -335,6 +337,12 @@ export const ChatPane = memo(function ChatPane({
       }
     }
 
+    // 本地服务启动时会自动拉起 bridge；在其尚未就绪期间（autoStart && !running）
+    // 不显示连接错误横幅，避免启动闪烁。启动失败（lastError 有值）或已就绪（running）后恢复正常判断。
+    if (activeServer.id === LOCAL_SERVER_ID && autoStart && !running && !lastError) {
+      return undefined
+    }
+
     if (!activeServerHealth || activeServerHealth.status === 'checking' || activeServerHealth.status === 'online') {
       return undefined
     }
@@ -362,7 +370,7 @@ export const ChatPane = memo(function ChatPane({
         responseBody,
       },
     }
-  }, [activeServer, activeServerHealth])
+  }, [activeServer, activeServerHealth, autoStart, running, lastError])
 
   const navigationCtx = useMemo(
     () => ({ navigateToSession, currentSessionId: routeSessionId, currentDirectory: effectiveDirectory }),
