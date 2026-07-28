@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.1.0-beta.5] - 2026-07-28 (Pre-release)
+
+- fix(desktop): Windows GUI 下 home_dir 回退 USERPROFILE，修复认证误判与「Pi 尚未配置」浮层闪现 (e7013fd)
+- fix(ui): 本地 bridge 启动窗口内抑制「无法连接服务器」横幅，消除启动闪烁 (64a5cbd)
+
 ## [v0.1.0-beta.4] - 2026-07-28 (Pre-release)
 
 - fix: 检测 models.json 自定义 provider，修复已配置却弹「未配置」引导浮层 (32f6da2)
