@@ -59,7 +59,11 @@ struct SpawnedBridge {
 // ============================================
 
 fn home_dir() -> Option<PathBuf> {
-    env::var_os("HOME").map(PathBuf::from)
+    // HOME（Unix / MSYS）优先；Windows GUI 应用由 explorer 启动时不设 HOME，
+    // 回退到 dirs::home_dir()（USERPROFILE / 已知文件夹），否则 ~/.pi 会解析失败。
+    env::var_os("HOME")
+        .map(PathBuf::from)
+        .or_else(dirs::home_dir)
 }
 
 /// Compare dotted version strings ("v22.22.3" vs "v20.1.0").
