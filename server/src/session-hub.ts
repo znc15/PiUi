@@ -93,9 +93,7 @@ async function applyExtensionProviders(runtime: ModelRuntime): Promise<void> {
     })
     await loader.reload()
     const extensions = loader.getExtensions()
-    console.log(
-      `[session-hub] extensions loaded: ${extensions.extensions.length}, errors: ${extensions.errors.length}`,
-    )
+    console.log(`[session-hub] extensions loaded: ${extensions.extensions.length}, errors: ${extensions.errors.length}`)
     for (const failure of extensions.errors.slice(0, 3)) {
       console.warn(`[session-hub] extension load failed: ${failure.path}: ${failure.error}`)
     }
@@ -170,13 +168,7 @@ function emitPartUpdated(live: LiveSession, part: UiPart) {
   publishPayload('message.part.updated', { sessionID: live.meta.id, part }, live.meta.directory)
 }
 
-function emitPartDelta(
-  live: LiveSession,
-  messageID: string,
-  partID: string,
-  field: string,
-  delta: string,
-) {
+function emitPartDelta(live: LiveSession, messageID: string, partID: string, field: string, delta: string) {
   publishPayload(
     'message.part.delta',
     { sessionID: live.meta.id, messageID, partID, field, delta },
@@ -198,7 +190,9 @@ async function handlePiEvent(live: LiveSession, event: { type: string; [key: str
   // Abort is user-visible immediately. Ignore late provider chunks from the cancelled turn.
   if (
     live.abortRequested &&
-    ['message_update', 'tool_execution_start', 'tool_execution_update', 'tool_execution_end', 'message_end'].includes(event.type)
+    ['message_update', 'tool_execution_start', 'tool_execution_update', 'tool_execution_end', 'message_end'].includes(
+      event.type,
+    )
   ) {
     return
   }
@@ -431,11 +425,7 @@ async function createRuntime(cwd: string, sessionManager: SessionManager): Promi
     const a = agent as { beforeToolCall?: (context: unknown, signal?: unknown) => Promise<unknown> }
     const originalBeforeToolCall = a.beforeToolCall
     const settingsManager = runtime.services.settingsManager
-    const hook = permHub.createBeforeToolCallHook(
-      session.sessionId || '',
-      cwd,
-      settingsManager,
-    )
+    const hook = permHub.createBeforeToolCallHook(session.sessionId || '', cwd, settingsManager)
     a.beforeToolCall = async (context: unknown, signal?: unknown) => {
       // Run our permission hook first
       const c = context as {
@@ -732,7 +722,20 @@ export async function promptAsync(
   }
 
   live.meta.time.updated = Date.now()
-  live.meta.title = live.meta.title === 'New session' ? text.slice(0, 60) || live.meta.title : live.meta.title
+  // Auto-title from the first user message. Persist via setSessionName so the
+  // generated title survives a restart (otherwise the session file keeps the
+  // 'New session' placeholder written at creation time and the sidebar reverts).
+  if (live.meta.title === 'New session') {
+    const autoTitle = text.slice(0, 60) || live.meta.title
+    if (autoTitle !== live.meta.title) {
+      live.meta.title = autoTitle
+      try {
+        live.runtime.session.setSessionName(autoTitle)
+      } catch {
+        // optional API
+      }
+    }
+  }
   live.abortRequested = false
   emitSession('session.updated', live.meta)
 
