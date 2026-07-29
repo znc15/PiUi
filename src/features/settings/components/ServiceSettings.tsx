@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '../../../components/ui/Button'
-import { TrashIcon, WifiIcon, WifiOffIcon, SpinnerIcon, StopIcon, CheckIcon, AlertCircleIcon } from '../../../components/Icons'
+import {
+  TrashIcon,
+  WifiIcon,
+  WifiOffIcon,
+  SpinnerIcon,
+  StopIcon,
+  CheckIcon,
+  AlertCircleIcon,
+} from '../../../components/Icons'
 import { useServerStore, useIsMobile } from '../../../hooks'
 import { API_BASE_URL } from '../../../constants'
 import { LOCAL_SERVER_ID } from '../../../store/serverStore'
@@ -304,7 +312,12 @@ export function ServiceSettings() {
       >
         <div className="flex items-center gap-1.5">
           {!serviceStarting && !serviceRunning && (
-            <Button size="sm" variant="ghost" onClick={handleStartService} disabled={checkingService || stoppingService}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleStartService}
+              disabled={checkingService || stoppingService}
+            >
               {t('common:start')}
             </Button>
           )}
@@ -314,16 +327,18 @@ export function ServiceSettings() {
               {t('common:stop')}
             </Button>
           )}
-          <Button size="sm" variant="ghost" onClick={handleCheckService} disabled={serviceStarting || checkingService || stoppingService}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleCheckService}
+            disabled={serviceStarting || checkingService || stoppingService}
+          >
             {t('common:refresh')}
           </Button>
         </div>
       </SettingRow>
 
-      <SettingField
-        label={t('service.nodePath')}
-        description={t('service.nodePathHelp')}
-      >
+      <SettingField label={t('service.nodePath')} description={t('service.nodePathHelp')}>
         <input
           type="text"
           value={localNodePath}
@@ -426,7 +441,11 @@ function RuntimeInfoRow({
       <span className="shrink-0 w-20 text-text-400">{label}</span>
       {value ? (
         <span className={`break-all flex items-start gap-1 ${danger ? 'text-warning-100' : 'text-text-200'}`}>
-          {danger ? <AlertCircleIcon size={11} className="mt-0.5 shrink-0" /> : <CheckIcon size={11} className="mt-0.5 shrink-0 text-success-100" />}
+          {danger ? (
+            <AlertCircleIcon size={11} className="mt-0.5 shrink-0" />
+          ) : (
+            <CheckIcon size={11} className="mt-0.5 shrink-0 text-success-100" />
+          )}
           <span className="break-all">{value}</span>
         </span>
       ) : (

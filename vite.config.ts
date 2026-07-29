@@ -45,7 +45,8 @@ export default defineConfig({
           // 语言 grammar（@shikijs/langs/*）由 dynamic import 自动拆分
           if ((id.includes('shiki') || id.includes('@shikijs/')) && !id.includes('@shikijs/langs'))
             return 'vendor-shiki'
-          if (id.includes('marked') || id.includes('dompurify') || id.includes('morphdom') || id.includes('katex')) return 'vendor-markdown'
+          if (id.includes('marked') || id.includes('dompurify') || id.includes('morphdom') || id.includes('katex'))
+            return 'vendor-markdown'
 
           if (id.includes('@tauri-apps/')) return 'vendor-tauri'
         },

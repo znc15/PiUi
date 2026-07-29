@@ -212,7 +212,7 @@ export function requestPermission(params: {
     tool,
   }
 
-  return new Promise<PermissionReply>((resolve) => {
+  return new Promise<PermissionReply>(resolve => {
     const timer = setTimeout(() => {
       // Auto-reject on timeout
       pendingPermissions.delete(id)
@@ -247,11 +247,15 @@ export function replyPermission(requestID: string, reply: PermissionReply): bool
   }
 
   // Publish the reply event so other SSE subscribers know
-  publishPayload('permission.replied', {
-    sessionID: pending.request.sessionID,
-    requestID,
-    reply,
-  }, pending.directory)
+  publishPayload(
+    'permission.replied',
+    {
+      sessionID: pending.request.sessionID,
+      requestID,
+      reply,
+    },
+    pending.directory,
+  )
 
   pending.resolve(reply)
   return true
@@ -318,11 +322,15 @@ export function replyQuestion(requestID: string, answers: QuestionAnswer): boole
   clearTimeout(pending.timer)
   pendingQuestions.delete(requestID)
 
-  publishPayload('question.replied', {
-    sessionID: pending.request.sessionID,
-    requestID,
-    answers,
-  }, pending.directory)
+  publishPayload(
+    'question.replied',
+    {
+      sessionID: pending.request.sessionID,
+      requestID,
+      answers,
+    },
+    pending.directory,
+  )
 
   pending.resolve(answers)
   return true
@@ -339,10 +347,14 @@ export function rejectQuestion(requestID: string): boolean {
   clearTimeout(pending.timer)
   pendingQuestions.delete(requestID)
 
-  publishPayload('question.rejected', {
-    sessionID: pending.request.sessionID,
-    requestID,
-  }, pending.directory)
+  publishPayload(
+    'question.rejected',
+    {
+      sessionID: pending.request.sessionID,
+      requestID,
+    },
+    pending.directory,
+  )
 
   pending.reject('User rejected')
   return true
@@ -373,11 +385,15 @@ export function disposeSession(sessionID: string): void {
     if (pending.request.sessionID === sessionID) {
       clearTimeout(pending.timer)
       pendingPermissions.delete(id)
-      publishPayload('permission.replied', {
-        sessionID,
-        requestID: id,
-        reply: 'reject',
-      }, pending.directory)
+      publishPayload(
+        'permission.replied',
+        {
+          sessionID,
+          requestID: id,
+          reply: 'reject',
+        },
+        pending.directory,
+      )
       pending.resolve('reject')
     }
   }
@@ -387,10 +403,14 @@ export function disposeSession(sessionID: string): void {
     if (pending.request.sessionID === sessionID) {
       clearTimeout(pending.timer)
       pendingQuestions.delete(id)
-      publishPayload('question.rejected', {
-        sessionID,
-        requestID: id,
-      }, pending.directory)
+      publishPayload(
+        'question.rejected',
+        {
+          sessionID,
+          requestID: id,
+        },
+        pending.directory,
+      )
       pending.reject('Session disposed')
     }
   }

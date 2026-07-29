@@ -303,7 +303,12 @@ export function importServiceSettingsBackup(raw: unknown): void {
 
   serviceStore.setAutoStart(parsed?.autoStart === true)
   // 兼容旧备份字段 binaryPath
-  const nodePath = typeof parsed?.nodePath === 'string' ? parsed.nodePath : typeof parsed?.binaryPath === 'string' ? parsed.binaryPath : ''
+  const nodePath =
+    typeof parsed?.nodePath === 'string'
+      ? parsed.nodePath
+      : typeof parsed?.binaryPath === 'string'
+        ? parsed.binaryPath
+        : ''
   serviceStore.setNodePath(nodePath)
   serviceStore.setEnvVars(envVars)
 }

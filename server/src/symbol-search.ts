@@ -56,7 +56,12 @@ const SYMBOL_DEFS: SymbolDef[] = [
   { keyword: 'function', kind: KIND_FUNCTION, extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] },
   { keyword: 'class', kind: KIND_CLASS, extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] },
   { keyword: 'interface', kind: KIND_INTERFACE, extensions: ['.ts', '.tsx'] },
-  { keyword: 'type', kind: KIND_TYPE, extensions: ['.ts', '.tsx'], extractPattern: '^type\\s+([A-Za-z_$][\\w$]*)\\s*=' },
+  {
+    keyword: 'type',
+    kind: KIND_TYPE,
+    extensions: ['.ts', '.tsx'],
+    extractPattern: '^type\\s+([A-Za-z_$][\\w$]*)\\s*=',
+  },
   { keyword: 'enum', kind: KIND_ENUM, extensions: ['.ts', '.tsx'] },
   { keyword: 'const', kind: KIND_CONSTANT, extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] },
   { keyword: 'let', kind: KIND_VARIABLE, extensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs'] },
@@ -74,7 +79,12 @@ const SYMBOL_DEFS: SymbolDef[] = [
 
   // Go
   { keyword: 'func', kind: KIND_FUNCTION, extensions: ['.go'] },
-  { keyword: 'type', kind: KIND_CLASS, extensions: ['.go'], extractPattern: '^type\\s+([A-Za-z_][\\w]*)\\s+(struct|interface)' },
+  {
+    keyword: 'type',
+    kind: KIND_CLASS,
+    extensions: ['.go'],
+    extractPattern: '^type\\s+([A-Za-z_][\\w]*)\\s+(struct|interface)',
+  },
   { keyword: 'const', kind: KIND_CONSTANT, extensions: ['.go'] },
   { keyword: 'var', kind: KIND_VARIABLE, extensions: ['.go'] },
 
@@ -130,14 +140,28 @@ function extractIdentifier(lineText: string, keyword: string): string | null {
   // Remove leading modifiers and the keyword, then capture the identifier
   // Common modifiers across languages
   const modifiers = [
-    'export', 'declare', 'default', 'abstract', 'async', 'final', 'static',
-    'public', 'private', 'protected', 'internal', 'override', 'synchronized',
-    'pub', 'inline', 'volatile', 'transient', 'native', 'strictfp',
+    'export',
+    'declare',
+    'default',
+    'abstract',
+    'async',
+    'final',
+    'static',
+    'public',
+    'private',
+    'protected',
+    'internal',
+    'override',
+    'synchronized',
+    'pub',
+    'inline',
+    'volatile',
+    'transient',
+    'native',
+    'strictfp',
   ]
   const modifierPattern = modifiers.map(m => `${m}\\s+`).join('|')
-  const pattern = new RegExp(
-    `^(?:${modifierPattern})*${keyword}\\s+(?:\\*\\s+)?([A-Za-z_$@][\\w$]*)`,
-  )
+  const pattern = new RegExp(`^(?:${modifierPattern})*${keyword}\\s+(?:\\*\\s+)?([A-Za-z_$@][\\w$]*)`)
   const match = pattern.exec(lineText)
   return match ? match[1] : null
 }
@@ -200,9 +224,25 @@ export function searchSymbols(query: string, directory?: string): SymbolResult[]
 
     // Regex: start of line, optional modifiers, then one of the keywords
     const modifiers = [
-      'export', 'declare', 'default', 'abstract', 'async', 'final', 'static',
-      'public', 'private', 'protected', 'internal', 'override', 'synchronized',
-      'pub', 'inline', 'volatile', 'transient', 'native', 'strictfp',
+      'export',
+      'declare',
+      'default',
+      'abstract',
+      'async',
+      'final',
+      'static',
+      'public',
+      'private',
+      'protected',
+      'internal',
+      'override',
+      'synchronized',
+      'pub',
+      'inline',
+      'volatile',
+      'transient',
+      'native',
+      'strictfp',
     ]
     const modifierAlt = modifiers.map(m => `${m}\\s+`).join('|')
     const combinedPattern = `^(?:${modifierAlt})*(?:${keywordPattern})\\s+`
