@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.6-beta] - 2026-07-29 (Pre-release)
+## [v0.1.0-beta.6] - 2026-07-29 (Pre-release)
 
 - chore: 更新检查更新的仓库地址为 znc15/PiUi (d42ee30)
 - fix(session): 优化日志输出格式，简化函数参数定义，自动设置会话标题 (cbc137f)
